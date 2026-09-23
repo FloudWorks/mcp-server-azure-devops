@@ -1,10 +1,10 @@
 {
-  "name": "@tiberriver256/mcp-server-azure-devops",
-  "version": "0.1.47",
+  "name": "@floudworks/mcp-server-azure-devops",
+  "version": "0.1.47-tfvc.1",
   "description": "Azure DevOps reference server for the Model Context Protocol (MCP)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Tiberriver256/mcp-server-azure-devops"
+    "url": "https://github.com/FloudWorks/mcp-server-azure-devops"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
