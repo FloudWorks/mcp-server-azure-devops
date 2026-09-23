@@ -75,6 +75,21 @@ import {
 } from './features/wikis';
 
 import { tfvcTools, isTfvcRequest, handleTfvcRequest } from './features/tfvc';
+import {
+  workTrackingTools,
+  isWorkTrackingRequest,
+  handleWorkTrackingRequest,
+} from './features/work-tracking';
+import {
+  buildsReleasesTools,
+  isBuildsReleasesRequest,
+  handleBuildsReleasesRequest,
+} from './features/builds-releases';
+import {
+  artifactsTools,
+  isArtifactsRequest,
+  handleArtifactsRequest,
+} from './features/artifacts';
 
 // Create a safe console logging function that won't interfere with MCP protocol
 function safeLog(message: string) {
@@ -124,6 +139,9 @@ export function createAzureDevOpsServer(config: AzureDevOpsConfig): Server {
       ...pipelinesTools,
       ...wikisTools,
       ...tfvcTools,
+      ...workTrackingTools,
+      ...buildsReleasesTools,
+      ...artifactsTools,
     ];
 
     return { tools };
@@ -336,6 +354,18 @@ export function createAzureDevOpsServer(config: AzureDevOpsConfig): Server {
 
       if (isTfvcRequest(request)) {
         return await handleTfvcRequest(connection, request);
+      }
+
+      if (isWorkTrackingRequest(request)) {
+        return await handleWorkTrackingRequest(connection, request);
+      }
+
+      if (isBuildsReleasesRequest(request)) {
+        return await handleBuildsReleasesRequest(connection, request);
+      }
+
+      if (isArtifactsRequest(request)) {
+        return await handleArtifactsRequest(connection, request);
       }
 
       // If we get here, the tool is not recognized by any feature handler

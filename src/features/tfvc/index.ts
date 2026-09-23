@@ -1,6 +1,8 @@
 export * from './schemas';
 export * from './feature';
 export * from './tool-definitions';
+export * from './checkin';
+export * from './tf-tools';
 
 import { CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
 import { WebApi } from 'azure-devops-node-api';
@@ -30,6 +32,31 @@ import {
   tfvcListLabels,
 } from './feature';
 import { tfvcTools } from './tool-definitions';
+import { TfvcCreateChangesetSchema, tfvcCreateChangeset } from './checkin';
+import {
+  TfvcBranchSchema,
+  TfvcMergeCandidatesSchema,
+  TfvcMergeSchema,
+  TfvcShelveSchema,
+  TfvcCheckinShelvesetSchema,
+  TfvcDeleteShelvesetSchema,
+  TfvcCreateLabelSchema,
+  TfvcDeleteLabelSchema,
+  TfvcRollbackSchema,
+  TfvcRenameSchema,
+  TfvcWorkspaceSchema,
+  tfvcBranch,
+  tfvcMergeCandidates,
+  tfvcMerge,
+  tfvcShelve,
+  tfvcCheckinShelveset,
+  tfvcDeleteShelveset,
+  tfvcCreateLabel,
+  tfvcDeleteLabel,
+  tfvcRollback,
+  tfvcRename,
+  tfvcWorkspace,
+} from './tf-tools';
 
 const TFVC_TOOL_NAMES = tfvcTools.map((t) => t.name);
 
@@ -38,7 +65,7 @@ export const isTfvcRequest: RequestIdentifier = (request: CallToolRequest) =>
 
 function requireProject(projectId?: string): string {
   const p = projectId ?? defaultProject;
-  if (!p) {
+  if (!p || p === 'no default project') {
     throw new Error(
       'projectId is required (no AZURE_DEVOPS_DEFAULT_PROJECT is configured)',
     );
@@ -123,6 +150,55 @@ export const handleTfvcRequest: RequestHandler = async (
         }),
       );
     }
+    case 'tfvc_create_changeset': {
+      const a = TfvcCreateChangesetSchema.parse(raw);
+      return json(
+        await tfvcCreateChangeset(connection, {
+          ...a,
+          projectId: requireProject(a.projectId),
+        }),
+      );
+    }
+    case 'tfvc_branch':
+      return json(await tfvcBranch(connection, TfvcBranchSchema.parse(raw)));
+    case 'tfvc_merge_candidates':
+      return json(
+        await tfvcMergeCandidates(TfvcMergeCandidatesSchema.parse(raw)),
+      );
+    case 'tfvc_merge':
+      return json(await tfvcMerge(connection, TfvcMergeSchema.parse(raw)));
+    case 'tfvc_shelve': {
+      const a = TfvcShelveSchema.parse(raw);
+      return json(
+        await tfvcShelve(connection, {
+          ...a,
+          projectId: requireProject(a.projectId),
+        }),
+      );
+    }
+    case 'tfvc_checkin_shelveset':
+      return json(
+        await tfvcCheckinShelveset(
+          connection,
+          TfvcCheckinShelvesetSchema.parse(raw),
+        ),
+      );
+    case 'tfvc_delete_shelveset':
+      return json(
+        await tfvcDeleteShelveset(TfvcDeleteShelvesetSchema.parse(raw)),
+      );
+    case 'tfvc_create_label':
+      return json(await tfvcCreateLabel(TfvcCreateLabelSchema.parse(raw)));
+    case 'tfvc_delete_label':
+      return json(await tfvcDeleteLabel(TfvcDeleteLabelSchema.parse(raw)));
+    case 'tfvc_rollback':
+      return json(
+        await tfvcRollback(connection, TfvcRollbackSchema.parse(raw)),
+      );
+    case 'tfvc_rename':
+      return json(await tfvcRename(connection, TfvcRenameSchema.parse(raw)));
+    case 'tfvc_workspace':
+      return json(await tfvcWorkspace(TfvcWorkspaceSchema.parse(raw)));
     default:
       throw new Error(`Unknown TFVC tool: ${request.params.name}`);
   }
