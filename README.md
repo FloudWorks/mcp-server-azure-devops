@@ -169,6 +169,11 @@ Key environment variables include:
 | `AZURE_CLIENT_ID`              | Azure AD application ID (for service principals)                                   | Only with service principals | -                |
 | `AZURE_CLIENT_SECRET`          | Azure AD client secret (for service principals)                                    | Only with service principals | -                |
 | `LOG_LEVEL`                    | Logging level (debug, info, warn, error)                                           | No                           | info             |
+| `AZURE_DEVOPS_TF_PATH`         | Path to Visual Studio `TF.exe` for TFVC branch/merge/shelve tools                  | No                           | auto-detected    |
+| `AZURE_DEVOPS_TFVC_WORKDIR`    | Local folder for the MCP server's TFVC workspace                                    | No                           | `~/.azure-devops-mcp/tfvc/<collection>` |
+| `AZURE_DEVOPS_TFVC_WORKSPACE`  | Name of the MCP server's TFVC workspace                                             | No                           | `claude-mcp-<computer>` |
+| `AZURE_DEVOPS_TF_AUTH`         | TF.exe sign-in: `pat` or `windows`                                                  | No                           | `pat` if a PAT is set |
+| `AZURE_DEVOPS_PACKAGING_API_VERSION` | REST api-version for Azure Artifacts tools                                    | No                           | `5.0-preview.1`  |
 
 ## Troubleshooting Authentication
 
@@ -256,6 +261,14 @@ The Azure DevOps MCP server provides a variety of tools for interacting with Azu
 - [`update_pull_request`](https://github.com/tiberriver256/mcp-server-azure-devops/blob/main/docs/tools/pull-requests.md#update_pull_request) - Update an existing pull request (title, description, status, draft state, reviewers, work items)
 - [`get_pull_request_changes`](https://github.com/tiberriver256/mcp-server-azure-devops/blob/main/docs/tools/pull-requests.md#get_pull_request_changes) - List changes in a pull request and policy evaluation status
 - [`get_pull_request_checks`](https://github.com/tiberriver256/mcp-server-azure-devops/blob/main/docs/tools/pull-requests.md#get_pull_request_checks) - Summarize status checks, policy evaluations, and their related pipelines
+
+### TFVC Tools
+
+See [TFVC tools](docs/tools/tfvc.md). Read tools and `tfvc_create_changeset` use the REST API; `tfvc_branch`, `tfvc_merge`, `tfvc_merge_candidates`, `tfvc_shelve`, `tfvc_checkin_shelveset`, `tfvc_delete_shelveset`, `tfvc_create_label`, `tfvc_delete_label`, `tfvc_rollback`, `tfvc_rename` and `tfvc_workspace` run Visual Studio TF.exe in a dedicated workspace.
+
+### Work Tracking, Builds & Releases, and Artifacts Tools
+
+See [the tool reference](docs/tools/work-tracking-builds-artifacts.md): teams, iterations, area paths, sprints, saved queries, work item deletion; classic build definitions, builds, logs, releases, deployments and approvals; Azure Artifacts feeds, packages and versions.
 
 For comprehensive documentation on all tools, see the [Tools Documentation](https://github.com/tiberriver256/mcp-server-azure-devops/tree/main/docs/tools).
 
