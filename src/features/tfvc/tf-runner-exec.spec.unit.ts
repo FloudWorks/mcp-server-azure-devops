@@ -76,6 +76,16 @@ describe('tf runner execution', () => {
     ).resolves.toMatchObject({ exitCode: 100 });
   });
 
+  it('suggests Windows auth when TF.exe cannot sign in', async () => {
+    respond(() => ({
+      code: 100,
+      stderr: 'TF30063: You are not authorized to access https://x.',
+    }));
+    await expect(runner.tf('workspaces', [])).rejects.toThrow(
+      /AZURE_DEVOPS_TF_AUTH=windows/,
+    );
+  });
+
   it('uses Windows auth when requested', async () => {
     process.env.AZURE_DEVOPS_TF_AUTH = 'windows';
     respond(() => ({}));

@@ -8,8 +8,13 @@ function makeConnection(
   const updateWorkItem = jest.fn().mockResolvedValue({});
   const tfvc = {
     getItemsBatch: jest.fn(
-      async (req: { itemDescriptors: { path: string }[] }) =>
-        req.itemDescriptors.map((d) => {
+      async (req: { itemDescriptors: { path: string }[] }) => {
+        if (req.itemDescriptors.some((d) => !files[d.path])) {
+          throw new Error(
+            'The items requested either do not exist on the server',
+          );
+        }
+        return req.itemDescriptors.map((d) => {
           const f = files[d.path];
           return f
             ? [
@@ -20,7 +25,8 @@ function makeConnection(
                 },
               ]
             : [];
-        }),
+        });
+      },
     ),
     getItemContent: jest.fn(async (path: string) =>
       Readable.from([files[path].bytes]),
@@ -112,6 +118,26 @@ describe('tfvcCreateChangeset', () => {
         dryRun: false,
       }),
     ).rejects.toThrow(/matches 2 places/);
+  });
+
+  it('adds a new file next to an existing edit (server rejects mixed batches)', async () => {
+    const { connection, createChangeset } = makeConnection({
+      '$/P/Old.txt': { version: 4, bytes: Buffer.from('old') },
+    });
+    await tfvcCreateChangeset(connection, {
+      projectId: 'P',
+      comment: 'c',
+      changes: [
+        { path: '$/P/New.txt', changeType: 'add', content: 'new' },
+        { path: '$/P/Old.txt', changeType: 'edit', content: 'changed' },
+      ],
+      dryRun: false,
+    });
+    const body = createChangeset.mock.calls[0][0];
+    expect(
+      body.changes.map((c: { changeType: string }) => c.changeType),
+    ).toEqual(['add', 'edit']);
+    expect(body.changes[1].item.version).toBe(4);
   });
 
   it('returns a diff preview on dryRun without checking in', async () => {

@@ -235,8 +235,12 @@ export async function tf(
   const ok =
     result.exitCode === 0 || (opts.allowPartial && result.exitCode === 1);
   if (!ok && !opts.noThrow) {
+    const output = (result.stderr || result.stdout).trim();
+    const hint = /TF30063/.test(output)
+      ? ' TF.exe could not sign in. If Visual Studio on this computer is already connected to the server, set AZURE_DEVOPS_TF_AUTH=windows to reuse its sign-in.'
+      : '';
     throw new TfError(
-      `tf ${command} failed (exit ${result.exitCode}): ${(result.stderr || result.stdout).trim()}`,
+      `tf ${command} failed (exit ${result.exitCode}): ${output}${hint}`,
       result,
     );
   }

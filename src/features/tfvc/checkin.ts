@@ -1,5 +1,8 @@
 import { WebApi } from 'azure-devops-node-api';
-import { VersionControlRecursionType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
+import {
+  TfvcItem,
+  VersionControlRecursionType,
+} from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 import { createTwoFilesPatch } from 'diff';
 import { z } from 'zod';
 import {
@@ -96,18 +99,18 @@ async function getCurrentItems(
   const tfvc = await connection.getTfvcApi();
   const result = new Map<string, CurrentItem>();
   if (!paths.length) return result;
-  const batches = await tfvc.getItemsBatch(
-    {
-      includeContentMetadata: true,
-      itemDescriptors: paths.map((path) => ({
-        path,
-        recursionLevel: VersionControlRecursionType.None,
-      })),
-    },
-    projectId,
-  );
-  paths.forEach((path, i) => {
-    const item = batches?.[i]?.[0];
+  const lookup = (subset: string[]) =>
+    tfvc.getItemsBatch(
+      {
+        includeContentMetadata: true,
+        itemDescriptors: subset.map((path) => ({
+          path,
+          recursionLevel: VersionControlRecursionType.None,
+        })),
+      },
+      projectId,
+    );
+  const record = (path: string, item?: TfvcItem) => {
     if (item && !item.isFolder) {
       result.set(path.toLowerCase(), {
         version: item.version ?? 0,
@@ -115,7 +118,22 @@ async function getCurrentItems(
         exists: true,
       });
     }
-  });
+  };
+  try {
+    const batches = await lookup(paths);
+    paths.forEach((path, i) => record(path, batches?.[i]?.[0]));
+  } catch {
+    // The server rejects the whole batch if any item is missing (e.g. a new
+    // file being added), so fall back to one lookup per path.
+    for (const path of paths) {
+      try {
+        const batch = await lookup([path]);
+        record(path, batch?.[0]?.[0]);
+      } catch {
+        // not found: treated as a new file
+      }
+    }
+  }
   return result;
 }
 
