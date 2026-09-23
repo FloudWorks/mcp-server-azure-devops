@@ -74,6 +74,8 @@ import {
   handleWikisRequest,
 } from './features/wikis';
 
+import { tfvcTools, isTfvcRequest, handleTfvcRequest } from './features/tfvc';
+
 // Create a safe console logging function that won't interfere with MCP protocol
 function safeLog(message: string) {
   process.stderr.write(`${message}\n`);
@@ -121,6 +123,7 @@ export function createAzureDevOpsServer(config: AzureDevOpsConfig): Server {
       ...pullRequestsTools,
       ...pipelinesTools,
       ...wikisTools,
+      ...tfvcTools,
     ];
 
     return { tools };
@@ -329,6 +332,10 @@ export function createAzureDevOpsServer(config: AzureDevOpsConfig): Server {
 
       if (isWikisRequest(request)) {
         return await handleWikisRequest(connection, request);
+      }
+
+      if (isTfvcRequest(request)) {
+        return await handleTfvcRequest(connection, request);
       }
 
       // If we get here, the tool is not recognized by any feature handler
